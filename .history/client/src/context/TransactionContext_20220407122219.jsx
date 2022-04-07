@@ -39,7 +39,7 @@ export const TransactionProvider = ({ children }) => {
                     timestamp: new Date(transaction.timestamp.toNumber() * 1000).toLocaleString(),
                     message: transaction.message,
                     keyword: transaction.keyword,
-                    amount: parseInt(transaction.amount._hex) / (10 ** -18),
+                    amount: parseInt(transaction.amount._hex) * (10 ** -18),
                 }));
 
                 setTransactions(structuredTransactions);
@@ -73,20 +73,22 @@ export const TransactionProvider = ({ children }) => {
         }
     }
 
-    const checkIfTransactionsExists = async () => {
+    const checkIfTransactionExists = async () => {
         try {
-          if (ethereum) {
-            const transactionsContract = createEthereumContract();
-            const currentTransactionCount = await transactionsContract.getTransactionCount();
-    
-            window.localStorage.setItem("transactionCount", currentTransactionCount);
-          }
+            if (ethereum) {
+                const transactionContract = getEthereumContract();
+                const availableTransactions = await transactionContract.getAllTransactions();
+
+                console.log(availableTransactions);
+            } else {
+                console.log('No ethereum found');
+            }
         } catch (error) {
-          console.log(error);
-    
-          throw new Error("No ethereum object");
+            console.log(error);
+
+            throw new Error('No Ethereum object found');
         }
-      };
+    }
 
     const connectWallet = async () => {
         try {
@@ -140,11 +142,11 @@ export const TransactionProvider = ({ children }) => {
 
     useEffect(() => {
         checkIfWalletConnected();
-        checkIfTransactionsExists();
+        checkIfTransactionExists();
     }, []);
 
     return (
-        <TransactionContext.Provider value={{ connectWallet, connectedAccount, formData, setFormData, handleChange, sendTransaction, transactions, isLoading }}>
+        <TransactionContext.Provider value={{ connectWallet, connectedAccount, formData, setFormData, handleChange, sendTransaction }}>
             {children}
         </TransactionContext.Provider>
     )
